@@ -36,7 +36,8 @@ async function loadDataset() {
         price: num(get(row, 'averageprice', 'avgprice', 'price', 'cost', 'costfortwo')),
         offerCount: num(get(row, 'numberofoffers')),
         offer: get(row, 'offername').trim(),
-        area: get(row, 'area').trim(),
+        address: get(row, 'address').trim(),
+        area: (get(row, 'area').trim() || (get(row, 'location', 'city').includes(',') ? get(row, 'location', 'city').split(',')[0].trim() : '')),
         location: get(row, 'location', 'city').trim(),
         pureVeg: veg === '' ? null : ['1', 'true', 'yes', 'y', 'pureveg'].includes(veg)
       };
@@ -96,7 +97,7 @@ function toPlace(e, lat, lon) {
   const addr = [t['addr:housenumber'], t['addr:street'], suburb, t['addr:city']].filter(Boolean).join(', ');
   const diet = t['diet:vegetarian'];
   return {
-    live: true, name: t.name, category, addr, suburb,
+    live: true, name: t.name, category, addr, suburb, street: t['addr:street'] || '',
     cuisine: (t.cuisine || '').replace(/;/g, ', ').replace(/_/g, ' '),
     hours: t.opening_hours || '',
     dist: haversine(lat, lon, pl.lat, pl.lon),
@@ -109,8 +110,9 @@ function toPlace(e, lat, lon) {
 function matchDataset(p, city) {
   if (!dataset) return null;
   const n = norm(p.name), c = norm(city), where = norm(p.addr);
+  const keys = [p.street, p.suburb].map(norm).filter(k => k.length >= 4);
   const cands = dataset.filter(r => norm(r.name) === n && norm(r.location) && (norm(r.location).includes(c) || c.includes(norm(r.location))) &&
-    norm(r.area) && where.includes(norm(r.area)));
+    ((norm(r.area).length >= 3 && where.includes(norm(r.area))) || keys.some(k => norm(r.address).includes(k))));
   return cands.length === 1 ? cands[0] : null;
 }
 
@@ -140,7 +142,7 @@ function score(p, rad) {
   const parts = [];
   if (p.dist != null) parts.push([0.5, 1 - Math.min(p.dist / rad, 1)]);
   if (rating(p) != null) parts.push([0.4, rating(p) / 5]);
-  parts.push([0.1, ([p.cuisine || (p.ds && p.ds.cuisine), p.addr || p.area, rating(p), price(p)].filter(v => v).length) / 4]);
+  parts.push([0.1, ([p.cuisine || (p.ds && p.ds.cuisine), p.addr || p.address || p.area, rating(p), price(p)].filter(v => v).length) / 4]);
   const w = parts.reduce((s, x) => s + x[0], 0);
   return parts.reduce((s, x) => s + x[0] * x[1], 0) / w;
 }
@@ -168,7 +170,7 @@ function card(p) {
     : 'Saved dataset only. Location not verified, so no distance is shown. Rating, price and offers may be outdated.';
   return `<article class="card">${left}<div>
     <h3>${esc(p.name)}</h3>
-    <div class="meta"><span>${esc(p.live ? p.category : 'Dataset listing')}</span><span>${esc(p.live ? (p.addr || 'Address not available') : (p.area || 'Area not available'))}</span></div>
+    <div class="meta"><span>${esc(p.live ? p.category : 'Dataset listing')}</span><span>${esc(p.live ? (p.addr || 'Address not available') : ((p.address || p.area || 'Address not available').slice(0, 110)))}</span></div>
     <div class="meta"><span>Cuisine: ${cu ? esc(cu) : na}</span>
       <span>${r != null ? `<span class="rate">${r.toFixed(1)}</span>` : 'Rating: ' + na}${d && d.ratings ? ` (${esc(d.ratings)}${/[a-z]/i.test(d.ratings) ? '' : ' ratings'})` : ''}</span>
       <span>Price for two: ${pr != null ? '₹' + pr : na}</span></div>
