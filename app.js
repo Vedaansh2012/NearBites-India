@@ -1,6 +1,6 @@
 const $ = s => document.querySelector(s);
 const DATA_PATH = 'data/swiggy_file.csv.gz';
-let dataset = null, dsError = null, last = null;
+let dataset = null, dsError = null, last = null, dsReady = null;
 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const norm = s => String(s ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -24,15 +24,16 @@ async function loadDataset() {
     const text = new TextDecoder().decode(bytes);
     if (text.trimStart().startsWith('<')) throw new Error('Received a web page instead of CSV data.');
     const p = Papa.parse(text, { header: true, skipEmptyLines: true });
-    const get = (row, ...keys) => { for (const k in row) if (keys.includes(norm(k))) return row[k]; return ''; };
+    const junk = v => ['', '-', '--', 'na', 'n/a', 'nan', 'none', 'null'].includes(String(v ?? '').trim().toLowerCase());
+    const get = (row, ...keys) => { for (const k in row) if (keys.includes(norm(k)) && !junk(row[k])) return row[k]; return ''; };
     dataset = p.data.map(row => {
-      const veg = norm(get(row, 'pureveg'));
+      const veg = norm(get(row, 'pureveg', 'veg'));
       return {
-        name: get(row, 'restaurantname', 'name').trim(),
-        cuisine: get(row, 'cuisine', 'cuisines').trim(),
-        rating: num(get(row, 'rating')),
-        ratings: get(row, 'numberofratings', 'ratings').trim(),
-        price: num(get(row, 'averageprice', 'price')),
+        name: get(row, 'restaurantname', 'restaurant', 'name', 'hotelname').trim(),
+        cuisine: get(row, 'cuisine', 'cuisines', 'foodtype').trim(),
+        rating: num(get(row, 'rating', 'avgratings', 'avgrating', 'averagerating')),
+        ratings: get(row, 'numberofratings', 'totalratings', 'ratings', 'ratingcount').trim(),
+        price: num(get(row, 'averageprice', 'avgprice', 'price', 'cost', 'costfortwo')),
         offerCount: num(get(row, 'numberofoffers')),
         offer: get(row, 'offername').trim(),
         area: get(row, 'area').trim(),
@@ -169,7 +170,7 @@ function card(p) {
     <h3>${esc(p.name)}</h3>
     <div class="meta"><span>${esc(p.live ? p.category : 'Dataset listing')}</span><span>${esc(p.live ? (p.addr || 'Address not available') : (p.area || 'Area not available'))}</span></div>
     <div class="meta"><span>Cuisine: ${cu ? esc(cu) : na}</span>
-      <span>${r != null ? `<span class="rate">${r.toFixed(1)}</span>` : 'Rating: ' + na}${d && d.ratings ? ` (${esc(d.ratings)} ratings)` : ''}</span>
+      <span>${r != null ? `<span class="rate">${r.toFixed(1)}</span>` : 'Rating: ' + na}${d && d.ratings ? ` (${esc(d.ratings)}${/[a-z]/i.test(d.ratings) ? '' : ' ratings'})` : ''}</span>
       <span>Price for two: ${pr != null ? '₹' + pr : na}</span></div>
     <div class="meta">${vegTxt ? `<span>${vegTxt}</span>` : ''}${offer ? `<span>Offer: ${offer}</span>` : ''}${p.hours ? `<span>Listed hours: ${esc(p.hours)}</span>` : ''}</div>
     <div class="src">${src}</div></div></article>`;
@@ -195,6 +196,11 @@ function render() {
     let rows = dataset.filter(r => !matched.has(r) && (norm(r.location).includes(cn) || norm(r.area).includes(cn)) && passes(r, f, h2));
     rows.sort(mode === 'price' ? sorter('price') : sorter('rating'));
     const total = rows.length;
+    if (!total && !(f.q || f.cuisine || f.minr != null || f.maxp != null || f.veg || f.offers)) {
+      const cnt = {}; dataset.forEach(r => { if (r.location) cnt[r.location] = (cnt[r.location] || 0) + 1; });
+      const top = Object.entries(cnt).sort((a, b) => b[1] - a[1]).slice(0, 15).map(x => esc(x[0])).join(', ');
+      c += `<p class="note">No dataset rows mention "${esc(last.city)}". The dataset has ${dataset.length} restaurants. Locations it contains include: ${top || 'none found (check the Location column)'}.</p>`;
+    }
     c += `<p class="note">${total} listing(s) from the saved dataset. These are matched by city only. They are <b>not verified nearby</b> and have no distance. Ratings, prices and offers may be outdated.${mode === 'near' ? ' Nearest-first does not apply here.' : ''}</p>`;
     c += rows.slice(0, 30).map(r => card(r)).join('') + (total > 30 ? `<p class="note">Showing 30 of ${total}. Use the name, cuisine or other filters to narrow down.</p>` : '');
   }
@@ -214,6 +220,7 @@ $('#form').addEventListener('submit', async ev => {
   if (!f.city || !f.country) return showError('Please enter at least a city and a country.');
   const rad = +$('#radius').value, btn = $('#go');
   btn.disabled = true; $('#status').className = ''; $('#status').textContent = 'Finding your location…';
+  await dsReady;
   $('#live').innerHTML = ''; $('#city').innerHTML = '';
   try {
     const g = await geocode(f);
@@ -233,4 +240,4 @@ $('#form').addEventListener('submit', async ev => {
 
 ['sort', 'cat', 'veg', 'offers'].forEach(id => $('#' + id).addEventListener('change', render));
 ['q', 'cuisine', 'minr', 'maxp'].forEach(id => $('#' + id).addEventListener('input', render));
-loadDataset();
+dsReady = loadDataset();
