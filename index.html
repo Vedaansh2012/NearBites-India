@@ -3,101 +3,189 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>NearBites India – find food places near you</title>
-<meta name="description" content="Find restaurants, cafés, bakeries and dessert shops near any place in India and beyond.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Figtree:wght@400;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
+<title>NearBites India – food insights and a pick-for-me button</title>
+<style>
+:root{--ink:#1b1646;--ink2:#2a2466;--bg:#f4f3fb;--card:#fff;--line:#dcd9ee;--text:#1b1646;--mute:#5f5b86;--gold:#ffb703;--chili:#e63946;--mint:#1f9d8a}
+@media (prefers-color-scheme:dark){:root{--bg:#0f0d26;--card:#1a1740;--line:#33306b;--text:#ecebff;--mute:#a9a6d6;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text)}
+header{background:linear-gradient(160deg,var(--ink),var(--ink2));color:#fff;padding:1.6rem 1rem 4.5rem}
+header div{max-width:62rem;margin:0 auto}
+h1{margin:0;font-size:clamp(2rem,6vw,3.2rem);line-height:1.05;border-left:.4rem solid var(--gold);padding-left:.8rem}
+header p{margin:.7rem 0 0 1.2rem;color:#cfcdf5;max-width:36rem}
+main{max-width:62rem;margin:0 auto;padding:0 1rem 2rem}
+.panel,.box{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:1rem}
+.panel{margin-top:-3rem;box-shadow:0 10px 30px rgba(27,22,70,.15)}
+label{display:flex;flex-direction:column;gap:.2rem;font-size:.85rem;font-weight:600;color:var(--mute)}
+select{font:inherit;padding:.6rem;border:1.5px solid var(--line);border-radius:10px;background:var(--bg);color:var(--text);width:100%}
+select:focus{outline:3px solid var(--gold);outline-offset:1px}
+#status{margin:1rem 0;font-weight:600;color:var(--mute)}
+#status.err{background:rgba(230,57,70,.1);border:1.5px solid var(--chili);border-radius:12px;padding:.9rem;color:var(--text);font-weight:400}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(9rem,1fr));gap:.8rem;margin:1rem 0}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:.8rem}
+.tile b{display:block;font-size:1.8rem;line-height:1.1;color:var(--chili)}
+.tile span{font-size:.85rem;color:var(--mute)}
+.charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(19rem,1fr));gap:1rem}
+h2{margin:0 0 .2rem;font-size:1.2rem}
+.cap{font-size:.8rem;color:var(--mute);margin:0 0 .6rem}
+.bar{display:grid;grid-template-columns:7.5rem 1fr auto;gap:.5rem;align-items:center;font-size:.85rem;margin:.25rem 0}
+.bar i{display:block;height:.9rem;border-radius:6px;background:linear-gradient(90deg,var(--ink2),var(--gold))}
+.bar span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pick{margin-top:1rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(10rem,1fr));gap:.8rem;align-items:end}
+button{font:700 1rem system-ui,sans-serif;background:var(--gold);color:#1b1646;border:0;border-radius:10px;padding:.75rem 1.2rem;cursor:pointer;box-shadow:0 3px 0 #c78a00}
+button:active{transform:translateY(2px);box-shadow:0 1px 0 #c78a00}
+#result{margin-top:1rem}
+.res{border:2px dashed var(--gold);border-radius:14px;padding:1rem}
+.res h3{margin:0;font-size:1.5rem}
+.res .meta{margin:.2rem 0;color:var(--mute)}
+.res .meta b{color:var(--text)}
+footer{max-width:62rem;margin:0 auto;padding:1rem;font-size:.8rem;color:var(--mute)}
+</style>
 </head>
 <body>
-
-<header class="hero">
-  <div class="hero-inner">
-    <div class="brand">
-      <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path fill="#ffb703" d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.500a2.5 2.5 0 0 1 0 5z"/></svg>
-      <span>NearBites India</span>
-    </div>
-    <h1>Hungry? See what’s cooking within walking distance.</h1>
-    <p>Type a landmark or a city, choose how far you’re willing to go, and we’ll list real restaurants, cafés and bakeries around it.</p>
-  </div>
-  <div class="rings" aria-hidden="true">
-    <i class="r r1"></i><i class="r r2"></i><i class="r r3"></i>
-    <i class="dot d0"></i><i class="dot d1"></i><i class="dot d2"></i><i class="dot d3"></i>
-  </div>
-</header>
-
+<header><div>
+  <h1>NearBites India</h1>
+  <p id="sub">Explore India's food scene in numbers, then let us choose your next meal.</p>
+</div></header>
 <main>
-<form id="form" class="panel" novalidate>
-  <div class="quick">
-    <span>Try a city:</span>
-    <button type="button" class="chip" data-city="Guwahati" data-state="Assam">Guwahati</button>
-    <button type="button" class="chip" data-city="Mumbai" data-state="Maharashtra">Mumbai</button>
-    <button type="button" class="chip" data-city="Bengaluru" data-state="Karnataka">Bengaluru</button>
-    <button type="button" class="chip" data-city="New Delhi" data-state="Delhi">New Delhi</button>
-    <button type="button" class="chip" data-city="Kolkata" data-state="West Bengal">Kolkata</button>
-  </div>
-
-  <div class="grid">
-    <label>Building or landmark <input id="landmark" placeholder="e.g. Pan Bazaar"></label>
-    <label>Road or street <input id="road" placeholder="e.g. G.S. Road"></label>
-    <label>City * <input id="city" required placeholder="e.g. Guwahati"></label>
-    <label>State or region <input id="state" placeholder="e.g. Assam"></label>
-    <label>Country * <input id="country" required value="India"></label>
-    <label>How far?
-      <select id="radius">
-        <option value="500">500 m</option><option value="1000">1 km</option>
-        <option value="2000" selected>2 km</option><option value="3000">3 km</option>
-        <option value="5000">5 km</option><option value="10000">10 km</option>
-      </select></label>
-  </div>
-
-  <details>
-    <summary>More filters (all optional)</summary>
-    <div class="grid">
-      <label>Name or keywords <input id="q"></label>
-      <label>Cuisine <input id="cuisine" placeholder="e.g. Chinese"></label>
-      <label>Category
-        <select id="cat"><option value="all">All</option><option value="Restaurant">Restaurants</option><option value="Café">Cafés</option><option value="Bakery & dessert">Bakeries and desserts</option></select></label>
-      <label>Minimum rating <input id="minr" type="number" min="0" max="5" step="0.1" placeholder="e.g. 4"></label>
-      <label>Max price for two (₹) <input id="maxp" type="number" min="0" step="50"></label>
-      <label class="chk"><input id="veg" type="checkbox"> Pure vegetarian only</label>
-      <label class="chk"><input id="offers" type="checkbox"> Only listings with offers</label>
+  <div class="panel"><label>Explore <select id="city"><option>Loading…</option></select></label></div>
+  <div id="status" role="status">Loading the restaurant file…</div>
+  <div id="app" hidden>
+    <div class="tiles" id="tiles"></div>
+    <div class="charts">
+      <div class="box"><h2>Most common cuisines</h2><p class="cap">Number of restaurants</p><div id="c1"></div></div>
+      <div class="box"><h2>Best-rated cuisines</h2><p class="cap" id="cap2"></p><div id="c2"></div></div>
+      <div class="box"><h2>Typical price by cuisine</h2><p class="cap">Average price for two (₹), ten most common cuisines</p><div id="c3"></div></div>
+      <div class="box"><h2 id="h4">Busiest areas</h2><p class="cap">Number of restaurants</p><div id="c4"></div></div>
     </div>
-  </details>
-
-  <div class="row">
-    <label class="sortbox">Sort by
-      <select id="sort">
-        <option value="best">Best overall</option><option value="near">Nearest first</option>
-        <option value="rating">Highest rated</option><option value="price">Lowest listed price</option>
-      </select></label>
-    <button type="submit" id="go">Find food places</button>
+    <div class="box" style="margin-top:1rem">
+      <h2>Can't decide? Pick for me</h2>
+      <p class="cap">We choose a random restaurant from your selected place that matches your taste and budget. Only restaurants with 20 or more ratings are picked.</p>
+      <div class="pick">
+        <label>Cuisine <select id="pc"><option value="">Anything</option></select></label>
+        <label>Budget for two <select id="pp"><option value="0">Any</option><option value="200">Up to ₹200</option><option value="400">Up to ₹400</option><option value="700">Up to ₹700</option></select></label>
+        <label>Minimum rating <select id="pr"><option value="0">Any</option><option value="3.5">3.5+</option><option value="4">4.0+</option><option value="4.3">4.3+</option></select></label>
+        <button id="go" type="button">Pick for me</button>
+      </div>
+      <div id="result" aria-live="polite"></div>
+    </div>
   </div>
-  <p class="hint" id="bestnote">Best overall = distance (50%) + rating (40%) + how much data we have (10%). If a place has no rating, only the available parts are used.</p>
-</form>
-
-<div id="status" role="status" aria-live="polite"></div>
-<section id="live"></section>
-<section id="city"></section>
 </main>
-
-<footer>Live places © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a> (ODbL), via Nominatim and Overpass. Dataset ratings, prices and offers may be outdated.</footer>
-
+<footer>Data: saved Swiggy listing file. Ratings and prices may be outdated. Charts count what is in the file, not every restaurant in India.</footer>
 <script>
-document.querySelectorAll('.chip').forEach(function (b) {
-  b.addEventListener('click', function () {
-    document.getElementById('city').value = b.dataset.city;
-    document.getElementById('state').value = b.dataset.state;
-    document.getElementById('country').value = 'India';
-    document.getElementById('landmark').value = '';
-    document.getElementById('road').value = '';
-    document.getElementById('form').requestSubmit();
+var DATA_PATH = 'data/swiggy_file.csv.gz', ALL = 'All India', rows = [], scope = [];
+function $(s){ return document.querySelector(s); }
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function norm(s){ return String(s == null ? '' : s).toLowerCase().replace(/[^a-z0-9]/g, ''); }
+function num(v){ var n = parseFloat(String(v == null ? '' : v).replace(/[^0-9.]/g, '')); return isNaN(n) ? null : n; }
+function parseCSV(t){
+  var out = [], row = [], f = '', q = false;
+  for (var i = 0; i < t.length; i++){
+    var c = t[i];
+    if (q){ if (c === '"'){ if (t[i+1] === '"'){ f += '"'; i++; } else q = false; } else f += c; }
+    else if (c === '"') q = true;
+    else if (c === ','){ row.push(f); f = ''; }
+    else if (c === '\n'){ row.push(f.replace(/\r$/, '')); out.push(row); row = []; f = ''; }
+    else f += c;
+  }
+  if (f || row.length){ row.push(f); out.push(row); }
+  return out;
+}
+function fail(msg){
+  var s = $('#status'); s.className = 'err';
+  s.innerHTML = '<b>The restaurant file could not be loaded.</b><br>' + esc(msg) +
+    '<br><br>Expected file: <code>' + DATA_PATH + '</code> (folder <code>data</code>, next to index.html).<br>' +
+    'Check: 1) the file is named exactly <code>swiggy_file.csv.gz</code>; 2) it is inside the <code>data</code> folder; 3) Netlify has finished redeploying; 4) try Ctrl+Shift+R to refresh.';
+}
+async function load(){
+  try {
+    var res = await fetch(DATA_PATH);
+    if (!res.ok) throw new Error('The server answered HTTP ' + res.status + ' for ' + DATA_PATH + '.');
+    var u = new Uint8Array(await res.arrayBuffer()), text;
+    if (u[0] === 0x1f && u[1] === 0x8b){
+      if (typeof DecompressionStream === 'undefined') throw new Error('This browser is too old to unpack the file. Please update Chrome, Edge, Firefox or Safari.');
+      text = await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
+    } else text = new TextDecoder().decode(u);
+    if (text.trim().charAt(0) === '<') throw new Error('Received a web page instead of data (the file is probably missing).');
+    var t = parseCSV(text), head = t[0].map(norm), ix = {};
+    ['name','city','rating','ratingcount','cost','cuisine','address'].forEach(function(k){ ix[k] = head.indexOf(k); });
+    if (ix.name < 0 || ix.city < 0) throw new Error('Columns "name" and "city" were not found. The file has: ' + t[0].join(', '));
+    var g = function(r, k){ var v = ix[k] < 0 ? '' : (r[ix[k]] || '').trim(); return /^(--|-|na|nan|none|null)$/i.test(v) ? '' : v; };
+    for (var i = 1; i < t.length; i++){
+      var r = t[i]; if (r.length < 2 || !g(r,'name')) continue;
+      var c = g(r,'city'), p = c.lastIndexOf(',');
+      rows.push({ name: g(r,'name'), city: (p >= 0 ? c.slice(p+1) : c).trim(), area: p >= 0 ? c.slice(0,p).trim() : '',
+        rating: num(g(r,'rating')), rc: g(r,'ratingcount'), rcn: num(g(r,'ratingcount')) || 0, price: num(g(r,'cost')),
+        cuisines: g(r,'cuisine').split(',').map(function(x){ return x.trim(); }).filter(Boolean), address: g(r,'address') });
+    }
+    if (!rows.length) throw new Error('The file opened but contained no restaurants.');
+    setup();
+  } catch (e){ fail(e.message); }
+}
+function tally(list, keyFn){ var m = {}; list.forEach(function(r){ [].concat(keyFn(r)).forEach(function(k){ if (k) m[k] = (m[k] || 0) + 1; }); }); return m; }
+function top(m, n){ return Object.keys(m).sort(function(a,b){ return m[b] - m[a]; }).slice(0, n); }
+function bars(id, items){
+  var max = Math.max.apply(null, items.map(function(x){ return x.v; })) || 1;
+  $(id).innerHTML = items.length ? items.map(function(x){
+    return '<div class="bar"><span title="' + esc(x.l) + '">' + esc(x.l) + '</span><i style="width:' + Math.max(3, x.v / max * 100) + '%"></i><b>' + esc(x.t) + '</b></div>';
+  }).join('') : '<p class="cap">Not enough data here.</p>';
+}
+function setup(){
+  var cities = tally(rows, function(r){ return r.city; });
+  var keys = Object.keys(cities).sort(function(a,b){ return a.localeCompare(b); });
+  $('#city').innerHTML = '<option value="">' + ALL + ' (' + rows.length.toLocaleString() + ')</option>' + keys.map(function(k){ return '<option value="' + esc(k) + '">' + esc(k) + ' (' + cities[k] + ')</option>'; }).join('');
+  $('#city').addEventListener('change', refresh);
+  $('#go').addEventListener('click', pick);
+  $('#status').className = ''; $('#status').textContent = '';
+  $('#app').hidden = false;
+  refresh();
+}
+function refresh(){
+  var city = $('#city').value;
+  scope = city ? rows.filter(function(r){ return r.city === city; }) : rows;
+  var rated = scope.filter(function(r){ return r.rating != null; });
+  var prices = scope.map(function(r){ return r.price; }).filter(function(p){ return p != null; }).sort(function(a,b){ return a - b; });
+  var avg = rated.length ? rated.reduce(function(s,r){ return s + r.rating; }, 0) / rated.length : null;
+  var cu = tally(scope, function(r){ return r.cuisines; });
+  $('#sub').textContent = 'Exploring ' + (city || ALL) + ': ' + scope.length.toLocaleString() + ' restaurants in the saved file.';
+  $('#tiles').innerHTML = [
+    [scope.length.toLocaleString(), 'restaurants'],
+    [avg == null ? '–' : avg.toFixed(2), 'average rating (' + rated.length.toLocaleString() + ' rated)'],
+    [prices.length ? '₹' + prices[Math.floor(prices.length / 2)] : '–', 'typical price for two (median)'],
+    [Object.keys(cu).length, 'different cuisines']
+  ].map(function(x){ return '<div class="tile"><b>' + x[0] + '</b><span>' + x[1] + '</span></div>'; }).join('');
+  bars('#c1', top(cu, 10).map(function(k){ return { l: k, v: cu[k], t: String(cu[k]) }; }));
+  var minN = city ? 8 : 100;
+  $('#cap2').textContent = 'Average rating, only cuisines with at least ' + minN + ' rated restaurants (bars start at 3.0 so differences are easy to see)';
+  var sum = {}, cnt = {};
+  rated.forEach(function(r){ r.cuisines.forEach(function(c){ sum[c] = (sum[c] || 0) + r.rating; cnt[c] = (cnt[c] || 0) + 1; }); });
+  var avgs = {}; Object.keys(sum).forEach(function(c){ if (cnt[c] >= minN) avgs[c] = sum[c] / cnt[c]; });
+  bars('#c2', top(avgs, 10).map(function(k){ return { l: k, v: avgs[k] - 3, t: avgs[k].toFixed(2) }; }));
+  var ps = {}, pn = {};
+  scope.forEach(function(r){ if (r.price == null) return; r.cuisines.forEach(function(c){ ps[c] = (ps[c] || 0) + r.price; pn[c] = (pn[c] || 0) + 1; }); });
+  bars('#c3', top(cu, 10).filter(function(k){ return pn[k]; }).map(function(k){ var a = ps[k] / pn[k]; return { l: k, v: a, t: '₹' + Math.round(a) }; }));
+  var grp = city ? tally(scope, function(r){ return r.area; }) : tally(scope, function(r){ return r.city; });
+  $('#h4').textContent = city ? 'Busiest areas in ' + city : 'Cities with the most restaurants';
+  bars('#c4', top(grp, 10).map(function(k){ return { l: k, v: grp[k], t: String(grp[k]) }; }));
+  var all = Object.keys(cu).sort(function(a,b){ return a.localeCompare(b); });
+  $('#pc').innerHTML = '<option value="">Anything</option>' + all.map(function(k){ return '<option value="' + esc(k) + '">' + esc(k) + '</option>'; }).join('');
+  $('#result').innerHTML = '';
+}
+function pick(){
+  var c = $('#pc').value, p = parseFloat($('#pp').value), m = parseFloat($('#pr').value);
+  var pool = scope.filter(function(r){
+    return r.rating != null && r.rcn >= 20 && (!c || r.cuisines.indexOf(c) >= 0) && (!p || (r.price != null && r.price <= p)) && (!m || r.rating >= m);
   });
-});
+  if (!pool.length){ $('#result').innerHTML = '<p class="cap">No restaurant matches that mix here. Try a bigger budget, a lower rating, or "Anything" for cuisine.</p>'; return; }
+  var r = pool[Math.floor(Math.random() * pool.length)];
+  $('#result').innerHTML = '<div class="res"><h3>' + esc(r.name) + '</h3>' +
+    '<div class="meta"><b>Rating:</b> ' + r.rating.toFixed(1) + ' (' + esc(r.rc) + ')</div>' +
+    '<div class="meta"><b>Cuisine:</b> ' + esc(r.cuisines.join(', ') || 'Not available') + '</div>' +
+    '<div class="meta"><b>Price for two:</b> ' + (r.price != null ? '₹' + r.price : 'Not available') + '</div>' +
+    '<div class="meta"><b>Address:</b> ' + esc((r.address || 'Not available').slice(0, 110)) + '</div>' +
+    '<p class="cap">Picked from ' + pool.length + ' matching restaurants. Press the button again for another.</p></div>';
+}
+load();
 </script>
-<script src="https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-<script src="app.js"></script>
 </body>
 </html>
