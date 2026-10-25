@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NearBites India – find food places near you</title>
+<meta name="description" content="Find restaurants, cafés, bakeries and dessert shops near any place in India and beyond.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Figtree:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="brand">
+      <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path fill="#ffb703" d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.500a2.5 2.5 0 0 1 0 5z"/></svg>
+      <span>NearBites India</span>
+    </div>
+    <h1>Hungry? See what’s cooking within walking distance.</h1>
+    <p>Type a landmark or a city, choose how far you’re willing to go, and we’ll list real restaurants, cafés and bakeries around it.</p>
+  </div>
+  <div class="rings" aria-hidden="true">
+    <i class="r r1"></i><i class="r r2"></i><i class="r r3"></i>
+    <i class="dot d0"></i><i class="dot d1"></i><i class="dot d2"></i><i class="dot d3"></i>
+  </div>
+</header>
+
+<main>
+<form id="form" class="panel" novalidate>
+  <div class="quick">
+    <span>Try a city:</span>
+    <button type="button" class="chip" data-city="Guwahati" data-state="Assam">Guwahati</button>
+    <button type="button" class="chip" data-city="Mumbai" data-state="Maharashtra">Mumbai</button>
+    <button type="button" class="chip" data-city="Bengaluru" data-state="Karnataka">Bengaluru</button>
+    <button type="button" class="chip" data-city="New Delhi" data-state="Delhi">New Delhi</button>
+    <button type="button" class="chip" data-city="Kolkata" data-state="West Bengal">Kolkata</button>
+  </div>
+
+  <div class="grid">
+    <label>Building or landmark <input id="landmark" placeholder="e.g. Pan Bazaar"></label>
+    <label>Road or street <input id="road" placeholder="e.g. G.S. Road"></label>
+    <label>City * <input id="city" required placeholder="e.g. Guwahati"></label>
+    <label>State or region <input id="state" placeholder="e.g. Assam"></label>
+    <label>Country * <input id="country" required value="India"></label>
+    <label>How far?
+      <select id="radius">
+        <option value="500">500 m</option><option value="1000">1 km</option>
+        <option value="2000" selected>2 km</option><option value="3000">3 km</option>
+        <option value="5000">5 km</option><option value="10000">10 km</option>
+      </select></label>
+  </div>
+
+  <details>
+    <summary>More filters (all optional)</summary>
+    <div class="grid">
+      <label>Name or keywords <input id="q"></label>
+      <label>Cuisine <input id="cuisine" placeholder="e.g. Chinese"></label>
+      <label>Category
+        <select id="cat"><option value="all">All</option><option value="Restaurant">Restaurants</option><option value="Café">Cafés</option><option value="Bakery & dessert">Bakeries and desserts</option></select></label>
+      <label>Minimum rating <input id="minr" type="number" min="0" max="5" step="0.1" placeholder="e.g. 4"></label>
+      <label>Max price for two (₹) <input id="maxp" type="number" min="0" step="50"></label>
+      <label class="chk"><input id="veg" type="checkbox"> Pure vegetarian only</label>
+      <label class="chk"><input id="offers" type="checkbox"> Only listings with offers</label>
+    </div>
+  </details>
+
+  <div class="row">
+    <label class="sortbox">Sort by
+      <select id="sort">
+        <option value="best">Best overall</option><option value="near">Nearest first</option>
+        <option value="rating">Highest rated</option><option value="price">Lowest listed price</option>
+      </select></label>
+    <button type="submit" id="go">Find food places</button>
+  </div>
+  <p class="hint" id="bestnote">Best overall = distance (50%) + rating (40%) + how much data we have (10%). If a place has no rating, only the available parts are used.</p>
+</form>
+
+<div id="status" role="status" aria-live="polite"></div>
+<section id="live"></section>
+<section id="city"></section>
+</main>
+
+<footer>Live places © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a> (ODbL), via Nominatim and Overpass. Dataset ratings, prices and offers may be outdated.</footer>
+
+<script>
+document.querySelectorAll('.chip').forEach(function (b) {
+  b.addEventListener('click', function () {
+    document.getElementById('city').value = b.dataset.city;
+    document.getElementById('state').value = b.dataset.state;
+    document.getElementById('country').value = 'India';
+    document.getElementById('landmark').value = '';
+    document.getElementById('road').value = '';
+    document.getElementById('form').requestSubmit();
+  });
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
